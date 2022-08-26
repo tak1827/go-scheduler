@@ -13,9 +13,12 @@ const (
 )
 
 var (
-	DefaultNextSchedule = time.Now().Unix() + 60*60*24 // 1day later
-	DefaultLogger       = zerolog.New(os.Stderr).Level(zerolog.InfoLevel).With().Timestamp().Logger()
+	DefaultLogger = zerolog.New(os.Stderr).Level(zerolog.InfoLevel).With().Timestamp().Logger()
 )
+
+func defaultNextSchedule() int64 {
+	return time.Now().Unix() + 60*60*24*365 // 365 days later
+}
 
 func (s *Scheduler) defaultErrHandler(err error) {
 	s.logger.Error().Stack().Err(err).Msg("handled by default err handler")
