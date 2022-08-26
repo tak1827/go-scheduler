@@ -19,10 +19,10 @@ func MockUpcoming() (int64, bool) {
 
 func TestClose(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	srv := NewScheduler(false, MockWork, MockUpcoming)
+	sch := NewScheduler(false, MockWork, MockUpcoming)
 
-	srv.Start(ctx)
-	srv.Close(cancel)
+	sch.Start(ctx)
+	sch.Close(cancel)
 }
 
 func TestRegistSchedule(t *testing.T) {
@@ -38,15 +38,26 @@ func TestRegistSchedule(t *testing.T) {
 		}
 	)
 
-	srv := NewScheduler(false, work, MockUpcoming, WithErrHandler(errHandler))
-	srv.Start(ctx)
+	sch := NewScheduler(false, work, MockUpcoming, WithErrHandler(errHandler))
+	sch.Start(ctx)
 
 	for i := 0; i < 3; i++ {
-		_ = srv.RegistSchedule(time.Now().Unix())
+		_ = sch.RegistSchedule(time.Now().Unix())
 		time.Sleep(1 * time.Millisecond)
 	}
 
-	srv.Close(cancel)
+	// while waiting upcoming will be exected
+	time.Sleep(1 * time.Second)
 
-	require.Equal(t, int64(3), atomic.LoadInt64(&counter))
+	sch.Close(cancel)
+
+	require.Equal(t, int64(4), atomic.LoadInt64(&counter))
+}
+
+func TestCloseWithSrv(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	sch := NewScheduler(false, MockWork, MockUpcoming)
+
+	sch.Start(ctx)
+	sch.Close(cancel)
 }
