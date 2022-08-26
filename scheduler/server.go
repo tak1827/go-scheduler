@@ -43,6 +43,8 @@ func (s *Scheduler) handleRegistSchedule(w http.ResponseWriter, req *http.Reques
 	if err := s.RegistSchedule(m.Schedule); err != nil {
 		s.errHandler(err)
 	}
+
+	_, _ = w.Write([]byte("{\"msg\":\"succeed!\"}"))
 }
 
 type errMsg struct {

@@ -31,6 +31,7 @@ type Scheduler struct {
 	upcoming   UpcomingScheduleFunc
 	errHandler ErrHandler
 
+	outProcess bool
 	withServer bool
 
 	// if with server
@@ -40,11 +41,12 @@ type Scheduler struct {
 	timeout  int64
 }
 
-func NewScheduler(withServer bool, work WorkFunc, upcoming UpcomingScheduleFunc, opts ...Opt) (s Scheduler) {
+func NewScheduler(outProcess, withServer bool, work WorkFunc, upcoming UpcomingScheduleFunc, opts ...Opt) (s Scheduler) {
 	s.nextSchedule = defaultNextSchedule()
 	s.replaceNextScheduleCh = make(chan int64)
 	s.errHandler = s.defaultErrHandler
 	s.logger = DefaultLogger
+	s.outProcess = outProcess
 	s.withServer = withServer
 	s.endpoint = DEFAULT_ENDPOINT
 	s.work = work
@@ -75,7 +77,7 @@ func (s *Scheduler) NextSchedule() int64 {
 }
 
 func (s *Scheduler) RegistSchedule(schedule int64) error {
-	if s.withServer {
+	if s.outProcess {
 		var (
 			msg = RegisterScheduleMsg{
 				Schedule: schedule,

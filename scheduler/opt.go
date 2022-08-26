@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DEFAULT_ENDPOINT = ":8081"
+	DEFAULT_ENDPOINT = "127.0.0.1:8081"
 	DEFAULT_TIMEOUT  = int64(60)
 )
 
