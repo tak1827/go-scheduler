@@ -50,7 +50,8 @@ func TestRegistSchedule(t *testing.T) {
 	sch.Start(ctx)
 
 	for i := 0; i < 3; i++ {
-		_ = sch.RegistSchedule(time.Now().Unix())
+		err := sch.RegistSchedule(time.Now().Unix())
+		require.NoError(t, err)
 		time.Sleep(1 * time.Millisecond)
 	}
 
@@ -62,7 +63,7 @@ func TestRegistSchedule(t *testing.T) {
 	require.Equal(t, int64(4), atomic.LoadInt64(&counter))
 }
 
-func TestOutProcess(t *testing.T) {
+func TestSlave(t *testing.T) {
 	var (
 		ctxForIn, cancelForIn   = context.WithCancel(context.Background())
 		ctxForOut, cancelForOut = context.WithCancel(context.Background())
@@ -83,7 +84,8 @@ func TestOutProcess(t *testing.T) {
 	outProcessSch.Start(ctxForOut)
 
 	for i := 0; i < 3; i++ {
-		_ = outProcessSch.RegistSchedule(time.Now().Unix())
+		err := outProcessSch.RegistSchedule(time.Now().Unix())
+		require.NoError(t, err)
 		time.Sleep(1 * time.Millisecond)
 	}
 

@@ -24,6 +24,7 @@ type (
 type Scheduler struct {
 	nextSchedule          int64
 	replaceNextScheduleCh chan int64
+	startFlg              int64
 	closeFlg              int64
 	logger                zerolog.Logger
 
@@ -31,7 +32,7 @@ type Scheduler struct {
 	upcoming   UpcomingScheduleFunc
 	errHandler ErrHandler
 
-	outProcess bool
+	isSlave    bool
 	withServer bool
 
 	// if with server
@@ -41,12 +42,12 @@ type Scheduler struct {
 	timeout  int64
 }
 
-func NewScheduler(outProcess, withServer bool, work WorkFunc, upcoming UpcomingScheduleFunc, opts ...Opt) (s Scheduler) {
+func NewScheduler(isSlave, withServer bool, work WorkFunc, upcoming UpcomingScheduleFunc, opts ...Opt) (s Scheduler) {
 	s.nextSchedule = defaultNextSchedule()
 	s.replaceNextScheduleCh = make(chan int64)
 	s.errHandler = s.defaultErrHandler
 	s.logger = DefaultLogger
-	s.outProcess = outProcess
+	s.isSlave = isSlave
 	s.withServer = withServer
 	s.endpoint = DEFAULT_ENDPOINT
 	s.work = work
@@ -60,14 +61,7 @@ func NewScheduler(outProcess, withServer bool, work WorkFunc, upcoming UpcomingS
 		panic("worker func or upcoming func is null")
 	}
 
-	if s.withServer {
-		s.server = http.Server{
-			Addr:    s.endpoint,
-			Handler: &s,
-		}
-		s.client = http.Client{}
-		timeoutDuration = time.Duration(s.timeout) * time.Second
-	}
+	timeoutDuration = time.Duration(s.timeout) * time.Second
 
 	return
 }
@@ -77,7 +71,11 @@ func (s *Scheduler) NextSchedule() int64 {
 }
 
 func (s *Scheduler) RegistSchedule(schedule int64) error {
-	if s.outProcess {
+	if atomic.LoadInt64(&s.startFlg) == 0 {
+		return errors.New("not yet started")
+	}
+
+	if s.isSlave {
 		var (
 			msg = RegisterScheduleMsg{
 				Schedule: schedule,
@@ -98,19 +96,27 @@ func (s *Scheduler) RegistSchedule(schedule int64) error {
 	}
 
 	if schedule < s.NextSchedule() {
-		s.ReplaceNextSchedule(schedule)
+		s.replaceNextSchedule(schedule)
 	}
 
 	return nil
 }
 
-func (s *Scheduler) ReplaceNextSchedule(next int64) {
+func (s *Scheduler) replaceNextSchedule(next int64) {
 	s.replaceNextScheduleCh <- next
 }
 
 func (s *Scheduler) Start(cancelCtx context.Context) {
+	atomic.StoreInt64(&s.startFlg, 1)
+
 	if s.withServer {
 		go func() {
+			s.server = http.Server{
+				Addr:    s.endpoint,
+				Handler: s,
+			}
+			s.client = http.Client{}
+
 			ln, err := net.Listen("tcp", s.endpoint)
 			if err != nil {
 				s.errHandler(err)
