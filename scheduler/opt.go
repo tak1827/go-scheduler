@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DEFAULT_ENDPOINT = "127.0.0.1:8081"
+	DEFAULT_ENDPOINT = "127.0.0.1:8080"
 	DEFAULT_TIMEOUT  = int64(60)
 )
 
@@ -30,9 +30,8 @@ type Opt interface {
 
 type EndpointOpt string
 
-func (o EndpointOpt) Apply(s *Scheduler) error {
+func (o EndpointOpt) Apply(s *Scheduler) {
 	s.endpoint = string(o)
-	return nil
 }
 func WithEndpoint(endpoint string) EndpointOpt {
 	return EndpointOpt(endpoint)
