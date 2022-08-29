@@ -16,7 +16,7 @@ import (
 )
 
 type (
-	WorkFunc             func() error
+	WorkFunc             func(any ...interface{}) error
 	UpcomingScheduleFunc func() (int64, bool)
 	ErrHandler           func(error)
 )

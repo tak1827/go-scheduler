@@ -20,7 +20,7 @@ func main() {
 		isSlave     = false
 		withServer  = true
 		counter     int64
-		work        = func() error {
+		work        = func(any ...interface{}) error {
 			atomic.AddInt64(&counter, 1)
 			return nil
 		}

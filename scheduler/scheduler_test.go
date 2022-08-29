@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func MockWork() error {
+func MockWork(any ...interface{}) error {
 	return nil
 }
 
@@ -37,7 +37,7 @@ func TestRegistSchedule(t *testing.T) {
 	var (
 		ctx, cancel = context.WithCancel(context.Background())
 		counter     int64
-		work        = func() error {
+		work        = func(any ...interface{}) error {
 			atomic.AddInt64(&counter, 1)
 			return nil
 		}
@@ -68,7 +68,7 @@ func TestSlave(t *testing.T) {
 		ctxForIn, cancelForIn   = context.WithCancel(context.Background())
 		ctxForOut, cancelForOut = context.WithCancel(context.Background())
 		counter                 int64
-		work                    = func() error {
+		work                    = func(any ...interface{}) error {
 			atomic.AddInt64(&counter, 1)
 			return nil
 		}
